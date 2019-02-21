@@ -64,6 +64,7 @@ type Action struct {
 }
 type Param struct {
 	Intent string `json:"intent"`
+	AppPkgName string `json:"appPkgName"`
 }
 
 type ExtObj struct {
@@ -94,6 +95,11 @@ func (this *Message) SetTitle(title string) *Message {
 
 func (this *Message) SetIntent(intent string) *Message {
 	this.Hps.Msg.Action.Param.Intent = intent
+	return this
+}
+
+func (this *Message) SetAppPkgName(appPkgName string) *Message {
+	this.Hps.Msg.Action.Param.AppPkgName = appPkgName
 	return this
 }
 

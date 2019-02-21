@@ -2,7 +2,6 @@ package hw_push
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -15,7 +14,7 @@ import (
  * init
  */
 func NewClient(clientID string, clientSecret string) *HuaweiPushClient {
-	fmt.Println("stevelee-me/huaweiPush", "NewClient", "clientID", clientID, "clientSecret", clientSecret)
+
 	vers := &Vers{
 		Ver:   "1",
 		AppID: clientID,
@@ -44,6 +43,7 @@ func NewMessage() *Message {
 					Type: 1, //1, 自定义行为; 2, 打开URL; 3, 打开App;
 					Param: Param{
 						Intent: "#Intent;compo=com.rvr/.Activity;S.W=U;end",
+						AppPkgName:"",
 					},
 				},
 			},
@@ -66,13 +66,13 @@ func FormPost(url string, data url.Values) ([]byte, error) {
 	u := ioutil.NopCloser(strings.NewReader(data.Encode()))
 	r, err := http.Post(url, "application/x-www-form-urlencoded", u)
 	if err != nil {
-		fmt.Println("stevelee-me/huaweiPush", "FormPost", "err", err)
+
 		return []byte(""), err
 	}
 	defer r.Body.Close()
 	b, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		fmt.Println("stevelee-me/huaweiPush", "FormPost", "err", err)
+
 		return []byte(""), err
 	}
 	return b, err
@@ -88,7 +88,7 @@ func (this HuaweiPushClient) GetToken() string {
 	param["client_id"] = []string{this.ClientId}
 	param["client_secret"] = []string{this.ClientSecret}
 	res, err := FormPost(reqUrl, param)
-	fmt.Println("stevelee-me/huaweiPush", "GetToken", "res", string(res), "err", err)
+
 	if nil != err {
 		return ""
 	}
@@ -104,10 +104,10 @@ func (this HuaweiPushClient) GetToken() string {
  * push msg
  */
 func (this HuaweiPushClient) PushMsg(deviceToken, payload string) string {
-	fmt.Println("stevelee-me/huaweiPush", "PushMsg", "deviceToken", deviceToken, "payload", payload)
+
 	accessToken := this.GetToken()
 	reqUrl := PUSH_URL + "?nsp_ctx=" + url.QueryEscape(this.NspCtx)
-	fmt.Println("stevelee-me/huaweiPush", "PushMsg", "reqUrl", reqUrl)
+
 
 	var originParam = map[string]string{
 		"access_token":      accessToken,
@@ -117,7 +117,7 @@ func (this HuaweiPushClient) PushMsg(deviceToken, payload string) string {
 		"payload":           payload,
 		"expire_time":       time.Now().Format("2006-01-02T15:04"),
 	}
-	fmt.Println("stevelee-me/huaweiPush", "param", originParam)
+
 
 	param := make(url.Values)
 	param["access_token"] = []string{originParam["access_token"]}
@@ -128,6 +128,6 @@ func (this HuaweiPushClient) PushMsg(deviceToken, payload string) string {
 
 	// push
 	res, _ := FormPost(reqUrl, param)
-	fmt.Println("stevelee-me/huaweiPush", "PushMsg", "res", string(res))
+
 	return string(res)
 }
