@@ -1,8 +1,15 @@
-package hw_push
+package hwpush
 
 import (
 	"encoding/json"
 )
+
+/*
+ * 接口文档:
+ * https://developer.huawei.com/consumer/cn/service/hms/catalog/huaweipush_agent.html?page=hmssdk_huaweipush_api_reference_agent_s2
+ */
+
+var accessToken = AccessToken{AccessToken: "", Expires: 0}
 
 // url
 const (
@@ -23,6 +30,7 @@ const (
 type HuaweiPushClient struct {
 	ClientId     string
 	ClientSecret string
+	AppPkgName   string
 	NspCtx       string
 }
 
@@ -31,10 +39,26 @@ type Vers struct {
 	AppID string `json:"appId"`
 }
 
+type AccessToken struct {
+	AccessToken string
+	Expires     int64
+}
+
 type TokenResStruct struct {
-	Access_token string `json:"access_token"`
-	Expires_in   int    `json:"expires_in"`
-	Token_type   string `json:"token_type"`
+	AccessToken string `json:"access_token"`
+	Expires     int64  `json:"expires_in"`
+	Scope       string `json:"scope,omitempty"`
+	ErrorCode   string `json:"error,omitempty"`
+	ErrorMsg    string `json:"error_description,omitempty"`
+}
+
+type PushResStruct struct {
+	StatusCode int         `json:"statusCode"`
+	NspStatus  string      `json:"nspStatus,omitempty"`
+	PushCode   string      `json:"code"`
+	Msg        string      `json:"msg"`
+	RequestID  string      `json:"requestId"`
+	Ext        interface{} `json:"ext,omitempty"`
 }
 
 /**
@@ -63,7 +87,7 @@ type Action struct {
 	Param Param `json:"param"`
 }
 type Param struct {
-	Intent string `json:"intent"`
+	Intent     string `json:"intent,omitempty"`
 	AppPkgName string `json:"appPkgName"`
 }
 
@@ -71,24 +95,48 @@ type ExtObj struct {
 	Name string
 }
 type Ext struct {
-	Action  string `json:"action"`
-	Func    string `json:"func"`
-	Collect string `json:"collect"`
-	Title   string `json:"title"`
-	Content string `json:"content"`
-	Url     string `json:"url"`
+	BiTag     string                   `json:"biTag,omitempty"`
+	Icon      string                   `json:"icon,omitempty"`
+	Customize []map[string]interface{} `json:"customize,omitempty"`
+	Action    string                   `json:"action,omitempty"`
+	Func      string                   `json:"func,omitempty"`
+	Collect   string                   `json:"collect,omitempty"`
+	Title     string                   `json:"title,omitempty"`
+	Content   string                   `json:"content,omitempty"`
+	Url       string                   `json:"url,omitempty"`
 }
 
 /**
  **************************************** 封装
  */
 
+func (this *Message) SetBiTag(tag string) *Message {
+	this.Hps.Ext.BiTag = tag
+	return this
+}
+
+func (this *Message) SetIcon(icon string) *Message {
+	this.Hps.Ext.Icon = icon
+	return this
+}
+
+func (this *Message) SetCustomize(data []map[string]interface{}) *Message {
+	this.Hps.Ext.Customize = data
+	return this
+}
+
 func (this *Message) SetContent(content string) *Message {
+	if content == "" {
+		content = " "
+	}
 	this.Hps.Msg.Body.Content = content
 	return this
 }
 
 func (this *Message) SetTitle(title string) *Message {
+	if title == "" {
+		title = " "
+	}
 	this.Hps.Msg.Body.Title = title
 	return this
 }
@@ -132,7 +180,7 @@ func (this *Message) SetExtUrl(url string) *Message {
 func (this *Message) Json() string {
 	bytes, err := json.Marshal(this)
 	if err != nil {
-		panic(err)
+		return ""
 	}
 	return string(bytes)
 }

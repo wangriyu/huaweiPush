@@ -1,15 +1,8 @@
-# hw_push
+# hwpush
 
-> Huawei Push
+> Huawei HMS SDK: https://developer.huawei.com/consumer/cn/service/hms/catalog/huaweipush_agent.html?page=hmssdk_huaweipush_api_reference_agent_s2
 
 ---
-
-```
-
-华为 push 接口升级, 导致原先的引用库无法继续使用, 故...
-
-```
-
 
 ```
 
@@ -18,25 +11,25 @@ package main
 
 import (
 	"fmt"
-	huawei "github.com/stevelee-me/huaweiPush"
+	huawei "github.com/wangriyu/huaweiPush"
 )
 
 func main() {
 	ClientId := "***"
 	ClientSecret := "***"
-	client := huawei.NewClient(ClientId, ClientSecret)
+	AppPkgName := "***"
+	client := huawei.NewClient(ClientId, ClientSecret, AppPkgName)
 
-	// getToken
-	// accessToken := client.GetToken()
-	// fmt.Println("accessToken", accessToken)
+    deviceToken := "***"
+    extra := struct {
+        SessionID   int `json:"session_id"`
+        SessionType int `json:"session_type"`
+    }{123456, 789}
 
-	// push msg(会自己去 getToken 再请求推送)
-	token := "***"
-	payload := huawei.NewMessage().SetContent("huawei-content").SetTitle("huawei-title").Json()
-	result := client.PushMsg(token, payload)
-	fmt.Println("result", result)
+	payload := huawei.NewMessage().SetContent("huawei-content").SetTitle("huawei-title").SetAppPkgName(client.AppPkgName).SetCustomize([]map[string]interface{}{{"extra": extra}})
+	result := client.PushMsg(deviceToken, payload.Json())
+	fmt.Printf("result: %+v\n", result)
 }
-
 ```
 
 ---
